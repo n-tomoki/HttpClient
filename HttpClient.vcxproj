@@ -22,7 +22,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -30,7 +30,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -102,20 +102,36 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ComboCtrl.h" />
+    <ClInclude Include="day.h" />
     <ClInclude Include="DlgMain.h" />
+    <ClInclude Include="ExComboBox.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="HttpClient.h" />
+    <ClInclude Include="lib.h" />
+    <ClInclude Include="Log.h" />
+    <ClInclude Include="MainThread.h" />
+    <ClInclude Include="Memory.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="UFile.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ComboCtrl.cpp" />
+    <ClCompile Include="day.cpp" />
     <ClCompile Include="DlgMain.cpp" />
+    <ClCompile Include="ExComboBox.cpp" />
     <ClCompile Include="HttpClient.cpp" />
+    <ClCompile Include="lib.cpp" />
+    <ClCompile Include="Log.cpp" />
+    <ClCompile Include="MainThread.cpp" />
+    <ClCompile Include="Memory.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="UFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="HttpClient.rc" />

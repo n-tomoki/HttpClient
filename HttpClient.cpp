@@ -34,6 +34,7 @@ CApp::~CApp()
 
 // 唯一の CApp オブジェクト
 CApp App;
+CLog Log;
 HANDLE hAppMutex;
 
 
@@ -75,22 +76,22 @@ BOOL CApp::InitInstance()
 	InitPath();
 
 	{ //二重起動チェック
-		char szMutex[MAX_PATH];
-		char *cp = szMutex;
+		WCHAR szMutex[MAX_PATH];
+		WCHAR *cp = szMutex;
 
-		strcpy_s(szMutex, m_strWorkPath);
-		strcat_s(szMutex, m_pszAppName);
+		wcscpy_s(szMutex, m_strWorkPath);
+		wcscat_s(szMutex, m_pszAppName);
 		while (*cp) {
 			if (*cp == '\\') { *cp  = '^'; }
 			cp++;
 		}
 
-		HANDLE hMutex = OpenMutexA(MUTEX_ALL_ACCESS, FALSE, szMutex);
+		HANDLE hMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, szMutex);
 		if (hMutex) {
 			CloseHandle(hMutex);
 			return FALSE;
 		} else {
-			hAppMutex = CreateMutexA(NULL, FALSE, szMutex);
+			hAppMutex = CreateMutexW(NULL, FALSE, szMutex);
 		}
 	}
 
@@ -139,23 +140,22 @@ void CApp::InitPath()
 	CString str;
 
 	//make m_strWorkPath
-	GetCurrentDirectoryA(MAX_PATH, str.GetBuffer(MAX_PATH));
+	GetCurrentDirectoryW(MAX_PATH, str.GetBuffer(MAX_PATH));
 	str.ReleaseBuffer();
 	if (!AnalyzePathFolder(str)) { str += '\\'; }
 
 	m_strWorkPath = str /*+ m_lpCmdLine*/;
 //	if (!AnalyzePathFolder(strWorkPath)) { strWorkPath += '\\'; }
 
-
 	// make profile name
 	if (m_pszRegistryKey == NULL) {
 		str = m_strWorkPath + m_pszProfileName;
 		free((void *)m_pszProfileName);
-		m_pszProfileName = _strdup((const char *)str);
+		m_pszProfileName = _wcsdup((const WCHAR *)str);
 	}
 
 	//make parfile name
-	m_strParamFileName = m_strWorkPath + m_pszAppName + ".par";
+	m_strParamFileName = m_strWorkPath + m_pszAppName + L".par";
 }
 
 
@@ -164,10 +164,10 @@ void CApp::InitPath()
 /// </summary>
 /// <param name="pszPath">パス</param>
 /// <returns>FALSE/TRUE</returns>
-BOOL CApp::AnalyzePathFolder(const char *pszPath)
+BOOL CApp::AnalyzePathFolder(const WCHAR *pszPath)
 {
 	BOOL bVal = TRUE;
-	const char *cp = pszPath;
+	const WCHAR *cp = pszPath;
 
 	while (*cp) {
 		if (_ismbblead(*cp) && _ismbbtrail(*(cp + 1))) {
@@ -192,14 +192,14 @@ BOOL CApp::DoBackground()
 {
 	MSG msg;
 
-	while (::PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+	while (::PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 		switch (msg.message) {
 		case WM_QUIT:
 		case WM_CLOSE:
 		case WM_DESTROY:
 			return FALSE;
 //		case WM_TIMER:
-//			::PeekMessageA(&msg, NULL, WM_TIMER, WM_TIMER, PM_REMOVE);
+//			::PeekMessage(&msg, NULL, WM_TIMER, WM_TIMER, PM_REMOVE);
 //			return TRUE;
 		}
 		if (!PumpMessage()) {
@@ -217,66 +217,66 @@ BOOL CApp::DoBackground()
 #define PROFILE_BUFFER_SIZE 4096
 #define PROFILE_VALUSE_SIZE 32
 
-CString CApp::GetParamFileString(const char *pszSection, const char *pszEntry, const char *pszDefault, const char *pszFileName)
+CString CApp::GetParamFileString(const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszDefault, const WCHAR *pszFileName)
 {
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 	if (pszDefault == NULL) {
-		pszDefault = "";
+		pszDefault  = L"";
 	}
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
 
-	char sz[PROFILE_BUFFER_SIZE];
+	WCHAR sz[PROFILE_BUFFER_SIZE];
 
-	DWORD dw = ::GetPrivateProfileStringA(pszSection, pszEntry, pszDefault, sz, sizeof(sz), pszName);
+	DWORD dw = ::GetPrivateProfileStringW(pszSection, pszEntry, pszDefault, sz, PROFILE_BUFFER_SIZE, pszName);
 	ASSERT(dw < PROFILE_BUFFER_SIZE - 1);
 	return sz;
 }
 
-int CApp::GetParamFileInt(const char *pszSection, const char *pszEntry, const int nDefault, const char *pszFileName)
+int CApp::GetParamFileInt(const WCHAR *pszSection, const WCHAR *pszEntry, const int nDefault, const WCHAR *pszFileName)
 {
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
 
-	return ::GetPrivateProfileIntA(pszSection, pszEntry, nDefault, pszName);
+	return ::GetPrivateProfileIntW(pszSection, pszEntry, nDefault, pszName);
 }
 
-BOOL CApp::GetParamFileBOOL(const char *pszSection, const char *pszEntry, const BOOL bDefault, const char *pszFileName)
+BOOL CApp::GetParamFileBOOL(const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bDefault, const WCHAR *pszFileName)
 {
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
 
-	return ((::GetPrivateProfileIntA(pszSection, pszEntry, bDefault, pszName) != 0) ? TRUE : FALSE);
+	return ((::GetPrivateProfileIntW(pszSection, pszEntry, bDefault, pszName) != 0) ? TRUE : FALSE);
 }
 
-DWORD CApp::GetParamFileHex(const char *pszSection, const char *pszEntry, const DWORD dwDefault, const char *pszFileName)
+DWORD CApp::GetParamFileHex(const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD dwDefault, const WCHAR *pszFileName)
 {
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
 
-	char szDef[PROFILE_VALUSE_SIZE];
-	char szVal[PROFILE_VALUSE_SIZE];
+	WCHAR szDef[PROFILE_VALUSE_SIZE];
+	WCHAR szVal[PROFILE_VALUSE_SIZE];
 
-	sprintf_s(szDef, "%X", dwDefault);
-	DWORD dw = ::GetPrivateProfileStringA(pszSection, pszEntry, szDef, szVal, sizeof(szVal), pszName);
+	swprintf_s(szDef, L"%X", dwDefault);
+	DWORD dw = ::GetPrivateProfileStringW(pszSection, pszEntry, szDef, szVal, PROFILE_VALUSE_SIZE, pszName);
 	ASSERT(dw < PROFILE_VALUSE_SIZE - 1);
 
 	DWORD dwVal = 0;
-	char c;
-	char *cp = szVal;
+	WCHAR c;
+	WCHAR *cp = szVal;
 
 	while (*cp) {
-		c = toupper(*cp++);
+		c = towupper(*cp++);
 		if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')) {
 			dwVal *= 16;
 			c -= '0';
@@ -293,106 +293,107 @@ DWORD CApp::GetParamFileHex(const char *pszSection, const char *pszEntry, const 
 }
 
 
-BOOL CApp::WriteParamFileString(const char *pszSection, const char *pszEntry, const char *pszValue, const char *pszFileName)
+BOOL CApp::WriteParamFileString(const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszValue, const WCHAR *pszFileName)
 {
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
-	ASSERT(strlen(pszValue) < PROFILE_BUFFER_SIZE - 1); // can't read in bigger
+	ASSERT(wcslen(pszValue) < PROFILE_BUFFER_SIZE - 1); // can't read in bigger
 
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
 
-	return ::WritePrivateProfileStringA(pszSection, pszEntry, pszValue, pszName);
+	return ::WritePrivateProfileStringW(pszSection, pszEntry, pszValue, pszName);
 }
 
-BOOL CApp::WriteParamFileInt(const char *pszSection, const char *pszEntry, const int nValue, const char *pszFileName)
-{
-	ASSERT(pszSection != NULL);
-	ASSERT(pszEntry != NULL);
-
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
-
-	char sz[PROFILE_VALUSE_SIZE];
-	sprintf_s(sz, "%d", nValue);
-	return ::WritePrivateProfileStringA(pszSection, pszEntry, sz, pszName);
-}
-
-BOOL CApp::WriteParamFileBOOL(const char *pszSection, const char *pszEntry, const BOOL bValue, const char *pszFileName)
+BOOL CApp::WriteParamFileInt(const WCHAR *pszSection, const WCHAR *pszEntry, const int nValue, const WCHAR *pszFileName)
 {
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
 
-	char sz[PROFILE_VALUSE_SIZE];
-	sprintf_s(sz, "%d", (bValue ? 1 : 0));
-	return ::WritePrivateProfileStringA(pszSection, pszEntry, sz, pszName);
+	WCHAR sz[PROFILE_VALUSE_SIZE];
+	swprintf_s(sz, L"%d", nValue);
+	return ::WritePrivateProfileStringW(pszSection, pszEntry, sz, pszName);
 }
 
-BOOL CApp::WriteParamFileHex(const char *pszSection, const char *pszEntry, const DWORD dwValue, const char *pszFileName)
+BOOL CApp::WriteParamFileBOOL(const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bValue, const WCHAR *pszFileName)
 {
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	const char *pszName = (const char *)m_strParamFileName;
-	if (pszFileName != NULL && strlen(pszFileName) > 0) { pszName = pszFileName; }
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
 
-	char sz[PROFILE_VALUSE_SIZE];
-	sprintf_s(sz, "%X", dwValue);
-	return ::WritePrivateProfileStringA(pszSection, pszEntry, sz, pszName);
+	WCHAR sz[PROFILE_VALUSE_SIZE];
+	swprintf_s(sz, L"%d", (bValue ? 1 : 0));
+	return ::WritePrivateProfileStringW(pszSection, pszEntry, sz, pszName);
 }
+
+BOOL CApp::WriteParamFileHex(const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD dwValue, const WCHAR *pszFileName)
+{
+	ASSERT(pszSection != NULL);
+	ASSERT(pszEntry != NULL);
+
+	const WCHAR *pszName = (const WCHAR *)m_strParamFileName;
+	if (pszFileName != NULL && wcslen(pszFileName) > 0) { pszName = pszFileName; }
+
+	WCHAR sz[PROFILE_VALUSE_SIZE];
+	swprintf_s(sz, L"%X", dwValue);
+	return ::WritePrivateProfileStringW(pszSection, pszEntry, sz, pszName);
+}
+
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-CString CApp::RegGetParamFileString(const char *pszSection, const char *pszEntry, const char *pszDefault)
+CString CApp::RegGetParamFileString(const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszDefault)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 	if (pszDefault == NULL) {
-		pszDefault = "";
+		pszDefault = L"";
 	}
 
-	return GetProfileStringA(pszSection, pszEntry, pszDefault);
+	return GetProfileStringW(pszSection, pszEntry, pszDefault);
 }
 
-int CApp::RegGetParamFileInt(const char *pszSection, const char *pszEntry, const int nDefault)
+int CApp::RegGetParamFileInt(const WCHAR *pszSection, const WCHAR *pszEntry, const int nDefault)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	return GetProfileIntA(pszSection, pszEntry, nDefault);
+	return GetProfileIntW(pszSection, pszEntry, nDefault);
 }
 
-BOOL CApp::RegGetParamFileBOOL(const char *pszSection, const char *pszEntry, const BOOL bDefault)
+BOOL CApp::RegGetParamFileBOOL(const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bDefault)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	return ((GetProfileIntA(pszSection, pszEntry, bDefault) != 0) ? TRUE : FALSE);
+	return ((GetProfileIntW(pszSection, pszEntry, bDefault) != 0) ? TRUE : FALSE);
 }
 
-DWORD CApp::RegGetParamFileHex(const char *pszSection, const char *pszEntry, const DWORD dwDefault)
+DWORD CApp::RegGetParamFileHex(const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD dwDefault)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	char szDef[PROFILE_VALUSE_SIZE];
+	WCHAR szDef[PROFILE_VALUSE_SIZE];
 	CString str;
 
-	sprintf_s(szDef, "%X", dwDefault);
-	str = GetProfileStringA(pszSection, pszEntry, szDef);
+	swprintf_s(szDef, L"%X", dwDefault);
+	str = GetProfileStringW(pszSection, pszEntry, szDef);
 
 	DWORD dwVal = 0;
-	char c;
-	const char *cp = (const char *)str;
+	WCHAR c;
+	const WCHAR *cp = (const WCHAR *)str;
 
 	while (*cp) {
-		c = toupper(*cp++);
+		c = towupper(*cp++);
 		if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')) {
 			dwVal *= 16;
 			c -= '0';
@@ -409,16 +410,16 @@ DWORD CApp::RegGetParamFileHex(const char *pszSection, const char *pszEntry, con
 }
 
 
-BOOL CApp::RegWriteParamFileString(const char *pszSection, const char *pszEntry, const char *pszValue)
+BOOL CApp::RegWriteParamFileString(const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszValue)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	return WriteProfileStringA(pszSection, pszEntry, pszValue);
+	return WriteProfileStringW(pszSection, pszEntry, pszValue);
 }
 
-BOOL CApp::RegWriteParamFileInt(const char *pszSection, const char *pszEntry, const int nValue)
+BOOL CApp::RegWriteParamFileInt(const WCHAR *pszSection, const WCHAR *pszEntry, const int nValue)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
@@ -427,7 +428,7 @@ BOOL CApp::RegWriteParamFileInt(const char *pszSection, const char *pszEntry, co
 	return WriteProfileInt(pszSection, pszEntry, nValue);
 }
 
-BOOL CApp::RegWriteParamFileBOOL(const char *pszSection, const char *pszEntry, const BOOL bValue)
+BOOL CApp::RegWriteParamFileBOOL(const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bValue)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
@@ -436,15 +437,15 @@ BOOL CApp::RegWriteParamFileBOOL(const char *pszSection, const char *pszEntry, c
 	return WriteProfileInt(pszSection, pszEntry, (bValue ? 1 : 0));
 }
 
-BOOL CApp::RegWriteParamFileHex(const char *pszSection, const char *pszEntry, const DWORD dwValue)
+BOOL CApp::RegWriteParamFileHex(const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD dwValue)
 {
 	ASSERT(m_pszRegistryKey != NULL);
 	ASSERT(pszSection != NULL);
 	ASSERT(pszEntry != NULL);
 
-	char sz[PROFILE_VALUSE_SIZE];
-	sprintf_s(sz, "%X", dwValue);
-	return WriteProfileStringA(pszSection, pszEntry, sz);
+	WCHAR sz[PROFILE_VALUSE_SIZE];
+	swprintf_s(sz, L"%X", dwValue);
+	return WriteProfileStringW(pszSection, pszEntry, sz);
 }
 /////////////////////////////////////////////////////////////////////////////
 

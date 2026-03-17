@@ -53,21 +53,31 @@ END_MESSAGE_MAP()
 CDlgMain::CDlgMain(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_HTTPCLIENT_DIALOG, pParent)
 {
-	m_hIcon = AfxGetApp()->LoadIconA(IDR_MAINFRAME);
+	m_hIcon = AfxGetApp()->LoadIconW(IDR_MAINFRAME);
 
 	m_bEnding     = FALSE;
 	m_bInitDialog = FALSE;
+
+	m_pComboUrlList = NULL;
+
+	m_bBusyThread = FALSE;
+	m_bBusyReport = FALSE;
+	m_pThread     = NULL;
 }
 
 
 CDlgMain::~CDlgMain()
 {
+	if (m_pComboUrlList != NULL) { delete m_pComboUrlList; m_pComboUrlList = NULL; }
+
+	if (m_pThread != NULL) { m_pThread->End(); delete m_pThread; m_pThread = NULL; }
 }
 
 
 void CDlgMain::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_COMBO_URL_LIST, m_cbUrlList);
 }
 
 BEGIN_MESSAGE_MAP(CDlgMain, CDialogEx)
@@ -79,10 +89,10 @@ BEGIN_MESSAGE_MAP(CDlgMain, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_QUIT, &CDlgMain::OnBnClickedButtonQuit)
 	ON_BN_CLICKED(IDC_BUTTON_GO, &CDlgMain::OnBnClickedButtonGo)
 	ON_WM_ENDSESSION()
-	ON_WM_DROPFILES()
 	ON_WM_GETMINMAXINFO()
 	ON_WM_SIZE()
 	ON_WM_MOVE()
+	ON_MESSAGE(WM_REPOER_MAIN_THREAD, OnReportMainTh)
 END_MESSAGE_MAP()
 
 
@@ -103,12 +113,12 @@ BOOL CDlgMain::OnInitDialog()
 	{
 		BOOL bNameValid;
 		CString strAboutMenu;
-		bNameValid = strAboutMenu.LoadStringA(IDS_ABOUTBOX);
+		bNameValid = strAboutMenu.LoadStringW(IDS_ABOUTBOX);
 		ASSERT(bNameValid);
 		if (!strAboutMenu.IsEmpty())
 		{
-			pSysMenu->AppendMenuA(MF_SEPARATOR);
-			pSysMenu->AppendMenuA(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+			pSysMenu->AppendMenuW(MF_SEPARATOR);
+			pSysMenu->AppendMenuW(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
 
@@ -149,7 +159,7 @@ void CDlgMain::OnPaint()
 	{
 		CPaintDC dc(this); // 描画のデバイス コンテキスト
 
-		SendMessageA(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+		SendMessageW(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
 		// クライアントの四角形領域内の中央
 		int cxIcon = GetSystemMetrics(SM_CXICON);
@@ -180,8 +190,8 @@ void CDlgMain::OnBnClickedOk()
 {
 	CWnd *pWnd = GetFocus();
 
-	if      (pWnd == GetDlgItem(IDC_BUTTON_QUIT)) { PostMessageA(WM_COMMAND, IDC_BUTTON_QUIT); }
-	else if (pWnd == GetDlgItem(IDC_BUTTON_GO))   { PostMessageA(WM_COMMAND, IDC_BUTTON_GO); }
+	if      (pWnd == GetDlgItem(IDC_BUTTON_QUIT)) { PostMessageW(WM_COMMAND, IDC_BUTTON_QUIT); }
+	else if (pWnd == GetDlgItem(IDC_BUTTON_GO))   { PostMessageW(WM_COMMAND, IDC_BUTTON_GO); }
 	else {
 		NextDlgCtrl();
 	}
@@ -189,7 +199,7 @@ void CDlgMain::OnBnClickedOk()
 
 void CDlgMain::OnBnClickedCancel()
 {
-	PostMessageA(WM_COMMAND, IDC_BUTTON_QUIT);
+	PostMessageW(WM_COMMAND, IDC_BUTTON_QUIT);
 }
 
 
@@ -201,6 +211,8 @@ void CDlgMain::OnBnClickedCancel()
 /// <summary>初期化</summary>
 void CDlgMain::Init()
 {
+	m_pComboUrlList = new CComboCtrl();
+	m_pComboUrlList->Init(&m_cbUrlList, L"URL_LIST");
 }
 
 
@@ -222,6 +234,8 @@ void CDlgMain::End(const int nEndCode)
 	if (m_bEnding) { return; }
 	m_bEnding = TRUE;
 
+	m_pComboUrlList->End();
+
 	EndDialog(IDOK);
 }
 
@@ -231,8 +245,77 @@ void CDlgMain::End(const int nEndCode)
 
 void CDlgMain::OnBnClickedButtonGo()
 {
-	// TODO: ここにコントロール通知ハンドラー コードを追加します。
+	if (m_bBusyReport) { return; }
+
+	if (m_bBusyThread == FALSE) {
+		if (m_pThread != NULL) {
+			m_pThread->End();
+			delete m_pThread;
+			m_pThread = NULL;
+		}
+
+		CString strUrl;
+
+		m_pComboUrlList->GetString(strUrl);
+
+
+		m_pThread = CMainThread::Create(m_hWnd, FALSE);
+		m_pThread->SetParam(strUrl);
+		m_pThread->ResumeThread();
+
+		Enable(FALSE);
+
+		int nCnt = 200;  // 最大2秒待つ
+		do {
+			Sleep(10);
+			if (m_pThread->IsRunStart()) { break; }
+		} while (--nCnt);
+		m_bBusyThread = TRUE;
+	} else {
+		m_pThread->Interruption();
+	}
 }
+
+
+/// <summary>スレッド実行中の画面処理</summary>
+/// <param name="bFlag">FALSE:実行中/TRUE:動いていない</param>
+void CDlgMain::Enable(BOOL bFlag)
+{
+	if (bFlag) {
+		GetDlgItem(IDC_BUTTON_GO)->SetWindowTextW(L"送信");
+	} else {
+		GetDlgItem(IDC_BUTTON_GO)->SetWindowTextW(L"中断");
+	}
+}
+
+
+//===============================================================================
+// スレッドからの連絡
+//===============================================================================
+LRESULT CDlgMain::OnReportMainTh(WPARAM wParam, LPARAM lParam)
+{
+	m_bBusyReport = TRUE;
+	{
+		if (m_pThread != NULL) {
+			m_pThread->End();
+			delete m_pThread;
+			m_pThread = NULL;
+		}
+
+		if (wParam) {
+			MessageBoxW(L"中断", L"確認", MB_OK|MB_ICONWARNING);
+		} else {
+			MessageBoxW(L"終了", L"確認", MB_OK|MB_ICONINFORMATION);
+		}
+
+		Enable(TRUE);
+		m_bBusyThread = FALSE;
+	}
+	m_bBusyReport = FALSE;
+
+	return 0;
+}
+
 
 
 
@@ -256,36 +339,6 @@ void CDlgMain::OnEndSession(BOOL bEnding)
 // いろいろ
 //===========================================================================
 
-/// <summary>
-/// “WM_DROPFILES”のメッセージ処理をする 
-/// </summary>
-/// <param name="hDropInfo">ドロップ情報</param>
-void CDlgMain::OnDropFiles(HDROP hDropInfo)
-{
-	int nSize = DragQueryFileA(hDropInfo, -1, NULL, 0);
-	char szFull[MAX_PATH + 5];
-
-	int nLen = DragQueryFileA(hDropInfo, 0, szFull, MAX_PATH);
-	if (!nLen) { return; }
-
-	// ドロップされる位置で追加する場所を判断する
-	{
-		POINT ptCur;
-		RECT  rcEdit;
-
-		GetCursorPos(&ptCur);
-
-//		GetDlgItem(IDC_EDIT1)->GetWindowRect(&rcEdit);
-		BOOL bInside = CRect(rcEdit).PtInRect(ptCur);
-
-		if (bInside) { 
-			MessageBox("中にある");
-		}
-	}
-
-	// ドロップされたファイルの情報を解放する
-	DragFinish(hDropInfo);
-}
 
 
 //===========================================================================

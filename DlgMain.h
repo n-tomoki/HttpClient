@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include "ExComboBox.h"
+#include "ComboCtrl.h"
+#include "MainThread.h"
+
 
 // CDlgMain ダイアログ
 class CDlgMain : public CDialogEx
@@ -31,7 +35,23 @@ protected:
 	void End(const int nEndCode = 0);
 
 
-// アイティムを移動＆ウインドウ位置を保存＆復元
+protected:
+	CComboCtrl *m_pComboUrlList;
+	CExComboBox m_cbUrlList;
+
+
+	// スレッド
+protected:
+	BOOL m_bBusyThread;
+	BOOL m_bBusyReport;
+
+	CMainThread *m_pThread;
+
+	void Enable(const BOOL bFlag = TRUE);
+
+
+
+	// アイティムを移動＆ウインドウ位置を保存＆復元
 protected:
 	BOOL         m_bInitDialog;
 	CSize        m_sizeDlgMin;
@@ -50,6 +70,7 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
+	afx_msg LRESULT OnReportMainTh(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedOk();
@@ -57,7 +78,6 @@ public:
 	afx_msg void OnBnClickedButtonQuit();
 	afx_msg void OnBnClickedButtonGo();
 	afx_msg void OnEndSession(BOOL bEnding);
-	afx_msg void OnDropFiles(HDROP hDropInfo);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnMove(int x, int y);

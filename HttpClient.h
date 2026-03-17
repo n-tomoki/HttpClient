@@ -9,6 +9,13 @@
 #endif
 
 #include "resource.h"		// メイン シンボル
+#include "Log.h"
+
+#define RX_TIMEOUT_MIN    2  //    2秒
+#define RX_TIMEOUT_DEF   60  //   60秒
+#define RX_TIMEOUT_MAX 3600  // 3600秒
+
+#define WM_REPOER_MAIN_THREAD (WM_APP + 0x3F01)
 
 
 // CApp:
@@ -35,25 +42,25 @@ public:
 	CString m_strWorkPath;
 
 	// パラメータファイル
-	CString GetParamFileString  (const char *pszSection, const char *pszEntry, const char *pszDefault = "", const char *pszFileName = "");
-	int     GetParamFileInt     (const char *pszSection, const char *pszEntry, const int nDefault = 0     , const char *pszFileName = "");
-	BOOL    GetParamFileBOOL    (const char *pszSection, const char *pszEntry, const BOOL bDefault = FALSE, const char *pszFileName = "");
-	DWORD   GetParamFileHex     (const char *pszSection, const char *pszEntry, const DWORD dwDefault = 0  , const char *pszFileName = "");
-	BOOL    WriteParamFileString(const char *pszSection, const char *pszEntry, const char *pszValue       , const char *pszFileName = "");
-	BOOL    WriteParamFileInt   (const char *pszSection, const char *pszEntry, const int nValue           , const char *pszFileName = "");
-	BOOL    WriteParamFileBOOL  (const char *pszSection, const char *pszEntry, const BOOL bValue          , const char *pszFileName = "");
-	BOOL    WriteParamFileHex   (const char *pszSection, const char *pszEntry, const DWORD nValue         , const char *pszFileName = "");
+	CString GetParamFileString  (const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszDefault = L"", const WCHAR *pszFileName = L"");
+	int     GetParamFileInt     (const WCHAR *pszSection, const WCHAR *pszEntry, const int nDefault = 0       , const WCHAR *pszFileName = L"");
+	BOOL    GetParamFileBOOL    (const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bDefault = FALSE  , const WCHAR *pszFileName = L"");
+	DWORD   GetParamFileHex     (const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD dwDefault = 0    , const WCHAR *pszFileName = L"");
+	BOOL    WriteParamFileString(const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszValue        , const WCHAR *pszFileName = L"");
+	BOOL    WriteParamFileInt   (const WCHAR *pszSection, const WCHAR *pszEntry, const int nValue             , const WCHAR *pszFileName = L"");
+	BOOL    WriteParamFileBOOL  (const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bValue            , const WCHAR *pszFileName = L"");
+	BOOL    WriteParamFileHex   (const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD nValue           , const WCHAR *pszFileName = L"");
 	// レジストリー
-	CString RegGetParamFileString  (const char *pszSection, const char *pszEntry, const char *pszDefault = "");
-	int     RegGetParamFileInt     (const char *pszSection, const char *pszEntry, const int nDefault = 0     );
-	BOOL    RegGetParamFileBOOL    (const char *pszSection, const char *pszEntry, const BOOL bDefault = FALSE);
-	DWORD   RegGetParamFileHex     (const char *pszSection, const char *pszEntry, const DWORD dwDefault = 0  );
-	BOOL    RegWriteParamFileString(const char *pszSection, const char *pszEntry, const char *pszValue       );
-	BOOL    RegWriteParamFileInt   (const char *pszSection, const char *pszEntry, const int nValue           );
-	BOOL    RegWriteParamFileBOOL  (const char *pszSection, const char *pszEntry, const BOOL bValue          );
-	BOOL    RegWriteParamFileHex   (const char *pszSection, const char *pszEntry, const DWORD nValue         );
+	CString RegGetParamFileString  (const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszDefault = L"");
+	int     RegGetParamFileInt     (const WCHAR *pszSection, const WCHAR *pszEntry, const int nDefault = 0       );
+	BOOL    RegGetParamFileBOOL    (const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bDefault = FALSE  );
+	DWORD   RegGetParamFileHex     (const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD dwDefault = 0    );
+	BOOL    RegWriteParamFileString(const WCHAR *pszSection, const WCHAR *pszEntry, const WCHAR *pszValue        );
+	BOOL    RegWriteParamFileInt   (const WCHAR *pszSection, const WCHAR *pszEntry, const int nValue             );
+	BOOL    RegWriteParamFileBOOL  (const WCHAR *pszSection, const WCHAR *pszEntry, const BOOL bValue            );
+	BOOL    RegWriteParamFileHex   (const WCHAR *pszSection, const WCHAR *pszEntry, const DWORD nValue           );
 	// パスの最後が'\'で終わってたら'TRUE'を返す
-	BOOL    AnalyzePathFolder(const char *pszPath);
+	BOOL    AnalyzePathFolder(const WCHAR *pszPath);
 	// メッセージ処理
 	BOOL    DoBackground();
 
@@ -63,3 +70,5 @@ public:
 };
 
 extern CApp App;
+extern CLog Log;
+
