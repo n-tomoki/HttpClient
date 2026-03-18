@@ -124,6 +124,10 @@ BOOL CDlgMain::OnInitDialog()
 		{
 			pSysMenu->AppendMenuW(MF_SEPARATOR);
 			pSysMenu->AppendMenuW(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+
+			pSysMenu->RemoveMenu(SC_RESTORE , MF_BYCOMMAND);  // ウィンドウを通常の位置とサイズに戻します。
+			pSysMenu->RemoveMenu(SC_MAXIMIZE, MF_BYCOMMAND);  // ウィンドウを最大化します。
+			pSysMenu->RemoveMenu(SC_MINIMIZE, MF_BYCOMMAND);  // ウィンドウを最小化します。
 		}
 	}
 
@@ -223,6 +227,8 @@ void CDlgMain::Init()
 
 	m_pComboUrlList = new CComboCtrl();
 	m_pComboUrlList->Init(&m_cbUrlList, L"URL_LIST");
+
+	App.m_HttpHeader.Init();
 }
 
 
@@ -250,6 +256,8 @@ void CDlgMain::End(const int nEndCode)
 	App.WriteParamFileBOOL(L"Param", L"OpenFile" , ((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->GetCheck());
 
 	m_pComboUrlList->End();
+
+	App.m_HttpHeader.Save();
 
 	EndDialog(IDOK);
 }
@@ -336,7 +344,9 @@ LRESULT CDlgMain::OnReportMainTh(WPARAM wParam, LPARAM lParam)
 		if (wParam) {
 			MessageBoxW(L"中断", L"確認", MB_OK|MB_ICONWARNING);
 		} else {
-			MessageBoxW(L"終了", L"確認", MB_OK|MB_ICONINFORMATION);
+			if (!((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->GetCheck()) {
+				MessageBoxW(L"終了", L"確認", MB_OK|MB_ICONINFORMATION);
+			}
 		}
 
 		Enable(TRUE);
