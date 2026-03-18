@@ -81,4 +81,8 @@ public:
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnMove(int x, int y);
+	afx_msg void OnBnClickedCheckLogUse();
+	afx_msg void OnBnClickedButtonUrlSave();
+	afx_msg void OnBnClickedButtonUrlDelete();
+	afx_msg void OnBnClickedButtonHeaderEdit();
 };

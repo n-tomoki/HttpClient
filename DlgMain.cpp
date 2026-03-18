@@ -93,6 +93,10 @@ BEGIN_MESSAGE_MAP(CDlgMain, CDialogEx)
 	ON_WM_SIZE()
 	ON_WM_MOVE()
 	ON_MESSAGE(WM_REPOER_MAIN_THREAD, OnReportMainTh)
+	ON_BN_CLICKED(IDC_CHECK_LOG_USE, &CDlgMain::OnBnClickedCheckLogUse)
+	ON_BN_CLICKED(IDC_BUTTON_URL_SAVE, &CDlgMain::OnBnClickedButtonUrlSave)
+	ON_BN_CLICKED(IDC_BUTTON_URL_DELETE, &CDlgMain::OnBnClickedButtonUrlDelete)
+	ON_BN_CLICKED(IDC_BUTTON_HEADER_EDIT, &CDlgMain::OnBnClickedButtonHeaderEdit)
 END_MESSAGE_MAP()
 
 
@@ -211,6 +215,11 @@ void CDlgMain::OnBnClickedCancel()
 /// <summary>初期化</summary>
 void CDlgMain::Init()
 {
+	((CButton *)GetDlgItem(IDC_CHECK_USE_JSON))  ->SetCheck(App.GetParamFileBOOL(L"Param", L"UseJson"));
+	((CButton *)GetDlgItem(IDC_CHECK_USE_HEADER))->SetCheck(App.GetParamFileBOOL(L"Param", L"UseHeader"));
+	((CButton *)GetDlgItem(IDC_CHECK_LOG_USE))   ->SetCheck(App.GetParamFileBOOL(L"Param", L"Log"));
+	((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->SetCheck(App.GetParamFileBOOL(L"Param", L"OpenFile"));
+
 	m_pComboUrlList = new CComboCtrl();
 	m_pComboUrlList->Init(&m_cbUrlList, L"URL_LIST");
 }
@@ -234,6 +243,11 @@ void CDlgMain::End(const int nEndCode)
 	if (m_bEnding) { return; }
 	m_bEnding = TRUE;
 
+	App.WriteParamFileBOOL(L"Param", L"UseJson",   ((CButton *)GetDlgItem(IDC_CHECK_USE_JSON))  ->GetCheck());
+	App.WriteParamFileBOOL(L"Param", L"UseHeader", ((CButton *)GetDlgItem(IDC_CHECK_USE_HEADER))->GetCheck());
+	App.WriteParamFileBOOL(L"Param", L"Log"      , ((CButton *)GetDlgItem(IDC_CHECK_LOG_USE))   ->GetCheck());
+	App.WriteParamFileBOOL(L"Param", L"OpenFile" , ((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->GetCheck());
+
 	m_pComboUrlList->End();
 
 	EndDialog(IDOK);
@@ -254,13 +268,17 @@ void CDlgMain::OnBnClickedButtonGo()
 			m_pThread = NULL;
 		}
 
-		CString strUrl;
+		
+		BOOL bUseHeader = ((CButton *)GetDlgItem(IDC_CHECK_USE_HEADER))->GetCheck();
+		BOOL bUseJson   = ((CButton *)GetDlgItem(IDC_CHECK_USE_JSON))  ->GetCheck();
+		BOOL bShowFile  = ((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->GetCheck();
 
+		CString strUrl;
 		m_pComboUrlList->GetString(strUrl);
 
-
 		m_pThread = CMainThread::Create(m_hWnd, FALSE);
-		m_pThread->SetParam(strUrl);
+		m_pThread->SetParam(strUrl, bUseHeader, bUseJson);
+		m_pThread->ShowFileOpen(bShowFile);
 		m_pThread->ResumeThread();
 
 		Enable(FALSE);
@@ -340,6 +358,52 @@ void CDlgMain::OnEndSession(BOOL bEnding)
 //===========================================================================
 
 
+/// <summary>
+/// 現在選択しているURLを保存する
+/// </summary>
+void CDlgMain::OnBnClickedButtonUrlSave()
+{
+	CString str;
+
+	m_pComboUrlList->GetString(str);
+	m_pComboUrlList->AddString(str);
+}
+
+
+/// <summary>
+/// 現在選択しているURLを削除する
+/// </summary>
+void CDlgMain::OnBnClickedButtonUrlDelete()
+{
+	CString str;
+
+	m_pComboUrlList->GetString(str);
+	m_pComboUrlList->DeleteString(str);
+}
+
+
+/// <summary>
+/// 送信ヘッダの編集をする
+/// </summary>
+void CDlgMain::OnBnClickedButtonHeaderEdit()
+{
+//	CDlgRequestHeader dlg;
+
+//	dlg.DoModal();
+}
+
+
+/// <summary>
+/// ログをファイルに落とすチェックボックスの処理
+/// </summary>
+void CDlgMain::OnBnClickedCheckLogUse()
+{
+	BOOL bFlag = ((CButton *)GetDlgItem(IDC_CHECK_LOG_USE))->GetCheck();
+
+	App.WriteParamFileBOOL(L"Param", L"Log", bFlag);
+}
+
+
 
 //===========================================================================
 // アイティムを移動＆ウインドウ位置を保存＆復元
@@ -365,7 +429,7 @@ void CDlgMain::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 		lpMMI->ptMinTrackSize.x = m_sizeDlgMin.cx;
 		lpMMI->ptMinTrackSize.y = m_sizeDlgMin.cy;
 		// lpMMI->ptMaxTrackSize.x = m_sizeDlgMin.cx;
-		// lpMMI->ptMaxTrackSize.y = m_sizeDlgMin.cy;
+		lpMMI->ptMaxTrackSize.y = m_sizeDlgMin.cy;
 	}
 }
 
@@ -410,10 +474,9 @@ void CDlgMain::OnSize(UINT nType, int cx, int cy)
 			m_sizeDlgOld = rcNew.Size();
 
 
-			//MoveDlgItem(IDC_EDIT_FILE_PATH  ,  0,  0, dx,  0); 
-			//MoveDlgItem(IDC_BUTTON_FILE_PATH, dx,  0, dx,  0); 
-			MoveDlgItem(IDC_BUTTON_QUIT     , dx,  0, dx, dy);
-			MoveDlgItem(IDC_BUTTON_GO       ,  0,  0, dx, dy);
+			MoveDlgItem(IDC_COMBO_URL_LIST,  0,  0, dx,  0); 
+			//MoveDlgItem(IDC_BUTTON_QUIT , dx,  0, dx, dy);
+			//MoveDlgItem(IDC_BUTTON_GO   ,  0,  0, dx, dy);
 
 			SaveWindowPos();
 
@@ -472,4 +535,3 @@ void CDlgMain::InitWindowPos()
 
 	MoveWindow(x, y, cx, cy);
 }
-

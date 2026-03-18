@@ -40,9 +40,6 @@ CMainThread::~CMainThread()
 BOOL CMainThread::InitInstance()
 {
 	m_nRxTimeOut = RX_TIMEOUT_DEF;
-	m_bUseHeader = TRUE;
-	m_bShowFile  = TRUE;
-	m_bUseJson   = TRUE;
 
 	return TRUE;
 }
@@ -112,9 +109,25 @@ void CMainThread::Interruption()
 }
 
 
-void CMainThread::SetParam(const WCHAR *pszUrl)
+/// <summary>
+/// パラメータのセット
+/// </summary>
+/// <param name="pszUrl"></param>
+void CMainThread::SetParam(const WCHAR *pszUrl, const BOOL bUseHeader, const BOOL bUseJson)
 {
-	m_strUrl = pszUrl;
+	m_strUrl     = pszUrl;
+	m_bUseHeader = bUseHeader;
+	m_bUseJson   = bUseJson;
+}
+
+
+/// <summary>
+/// 受信ファイルを開く
+/// </summary>
+/// <param name="bShowFile"></param>
+void CMainThread::ShowFileOpen(BOOL bShowFile)
+{
+	m_bShowFile  = bShowFile;
 }
 
 
@@ -134,7 +147,11 @@ int CMainThread::Run()
 	CString strPath;    // パス
 
 	if (!CheckUrl(dwService, strHost, strPath, wPort)) {
-		Main(dwService, strHost, strPath, wPort);
+		Log.Open();
+		{
+			Main(dwService, strHost, strPath, wPort);
+		}
+		Log.Close();
 	}
 
 	ExitInstance();
@@ -207,7 +224,7 @@ BOOL CMainThread::Main(DWORD dwService, CString strHost, CString strPath, WORD w
 	}
 
 	if (hConnect) {
-		hRequest = WinHttpOpenRequest(hConnect, L"POST", strPath,
+		hRequest = WinHttpOpenRequest(hConnect, L"GET", strPath,
 			NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_REFRESH|dwRequestFlag);
 		if (hRequest == NULL) {
 			LogPutsError(L"WinHttpOpenRequest");
