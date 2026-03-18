@@ -105,9 +105,12 @@
     <ClInclude Include="ComboCtrl.h" />
     <ClInclude Include="day.h" />
     <ClInclude Include="DlgMain.h" />
+    <ClInclude Include="DlgRequestHeader.h" />
     <ClInclude Include="ExComboBox.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="HttpClient.h" />
+    <ClInclude Include="HttpHeaderText.h" />
+    <ClInclude Include="JsonMolding.h" />
     <ClInclude Include="lib.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MainThread.h" />
@@ -121,8 +124,11 @@
     <ClCompile Include="ComboCtrl.cpp" />
     <ClCompile Include="day.cpp" />
     <ClCompile Include="DlgMain.cpp" />
+    <ClCompile Include="DlgRequestHeader.cpp" />
     <ClCompile Include="ExComboBox.cpp" />
     <ClCompile Include="HttpClient.cpp" />
+    <ClCompile Include="HttpHeaderText.cpp" />
+    <ClCompile Include="JsonMolding.cpp" />
     <ClCompile Include="lib.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="MainThread.cpp" />

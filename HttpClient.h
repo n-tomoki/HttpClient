@@ -10,6 +10,7 @@
 
 #include "resource.h"		// メイン シンボル
 #include "Log.h"
+#include "HttpHeaderText.h"
 
 #define RX_TIMEOUT_MIN    2  //    2秒
 #define RX_TIMEOUT_DEF   60  //   60秒
@@ -63,7 +64,8 @@ public:
 	BOOL    AnalyzePathFolder(const WCHAR *pszPath);
 	// メッセージ処理
 	BOOL    DoBackground();
-
+	
+	CHttpHeaderText m_HttpHeader;
 
 public:
 	DECLARE_MESSAGE_MAP()

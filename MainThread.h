@@ -53,7 +53,7 @@ protected:
 
 
 public:
-	void SetParam(const WCHAR *pszUrl, const BOOL bUseHeader, const BOOL bUseJson);
+	void SetParam(const WCHAR *pszUrl, CStringTable &tableHeader, const BOOL bUseHeader, const BOOL bUseJson);
 	void ShowFileOpen(BOOL bShowFile);
 
 

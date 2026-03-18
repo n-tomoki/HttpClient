@@ -7,6 +7,7 @@
 #include "HttpClient.h"
 #include "DlgMain.h"
 #include "afxdialogex.h"
+#include "DlgRequestHeader.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -276,8 +277,20 @@ void CDlgMain::OnBnClickedButtonGo()
 		CString strUrl;
 		m_pComboUrlList->GetString(strUrl);
 
+		// ヘッダ情報を取得
+		CStringTable tableHeader;
+		{
+			int nSize = App.m_HttpHeader.GetSize();
+
+			for (int i = 0; i <  nSize; i++) {
+				if (App.m_HttpHeader.GetParamUse(i)) {
+					tableHeader += App.m_HttpHeader.GetParamText(i);
+				}
+			}
+		}
+
 		m_pThread = CMainThread::Create(m_hWnd, FALSE);
-		m_pThread->SetParam(strUrl, bUseHeader, bUseJson);
+		m_pThread->SetParam(strUrl, tableHeader, bUseHeader, bUseJson);
 		m_pThread->ShowFileOpen(bShowFile);
 		m_pThread->ResumeThread();
 
@@ -387,9 +400,9 @@ void CDlgMain::OnBnClickedButtonUrlDelete()
 /// </summary>
 void CDlgMain::OnBnClickedButtonHeaderEdit()
 {
-//	CDlgRequestHeader dlg;
+	CDlgRequestHeader dlg;
 
-//	dlg.DoModal();
+	dlg.DoModal();
 }
 
 

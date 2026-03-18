@@ -7,6 +7,7 @@
 #include "winhttp.h"
 #include "afxinet.h"
 #include "lib.h"
+#include "JsonMolding.h"
 
 #pragma comment (lib, "winhttp.lib")
 
@@ -113,11 +114,12 @@ void CMainThread::Interruption()
 /// パラメータのセット
 /// </summary>
 /// <param name="pszUrl"></param>
-void CMainThread::SetParam(const WCHAR *pszUrl, const BOOL bUseHeader, const BOOL bUseJson)
+void CMainThread::SetParam(const WCHAR *pszUrl, CStringTable &tableHeader, const BOOL bUseHeader, const BOOL bUseJson)
 {
-	m_strUrl     = pszUrl;
-	m_bUseHeader = bUseHeader;
-	m_bUseJson   = bUseJson;
+	m_strUrl      = pszUrl;
+	m_bUseHeader  = bUseHeader;
+	m_bUseJson    = bUseJson;
+	m_tableHeader = tableHeader;
 }
 
 
@@ -339,8 +341,8 @@ BOOL CMainThread::Main(DWORD dwService, CString strHost, CString strPath, WORD w
 
 		if (m_bShowFile) {
 			if (m_bUseJson) {
-				//CJsonMolding json;
-				//json.Run(m_strResponsFileName, memResponsBody, memResponsHeader);
+				CJsonMolding json;
+				json.Run(m_strResponsFileName, memResponsBody, memResponsHeader);
 			} else {
 				FileOpen(m_strResponsFileName);
 			}
