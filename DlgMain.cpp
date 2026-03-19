@@ -60,6 +60,7 @@ CDlgMain::CDlgMain(CWnd* pParent /*=nullptr*/)
 	m_bInitDialog = FALSE;
 
 	m_pComboUrlList = NULL;
+	m_bUseBinary    = FALSE;
 
 	m_bBusyThread = FALSE;
 	m_bBusyReport = FALSE;
@@ -98,6 +99,7 @@ BEGIN_MESSAGE_MAP(CDlgMain, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_URL_SAVE, &CDlgMain::OnBnClickedButtonUrlSave)
 	ON_BN_CLICKED(IDC_BUTTON_URL_DELETE, &CDlgMain::OnBnClickedButtonUrlDelete)
 	ON_BN_CLICKED(IDC_BUTTON_HEADER_EDIT, &CDlgMain::OnBnClickedButtonHeaderEdit)
+	ON_BN_CLICKED(IDC_CHECK_BINARY, &CDlgMain::OnBnClickedCheckBinary)
 END_MESSAGE_MAP()
 
 
@@ -225,6 +227,9 @@ void CDlgMain::Init()
 	((CButton *)GetDlgItem(IDC_CHECK_LOG_USE))   ->SetCheck(App.GetParamFileBOOL(L"Param", L"Log"));
 	((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->SetCheck(App.GetParamFileBOOL(L"Param", L"OpenFile"));
 
+	m_bUseBinary = App.GetParamFileBOOL(L"Param", L"Binary");
+	((CButton *)GetDlgItem(IDC_CHECK_BINARY))->SetCheck(m_bUseBinary);
+
 	m_pComboUrlList = new CComboCtrl();
 	m_pComboUrlList->Init(&m_cbUrlList, L"URL_LIST");
 
@@ -252,8 +257,8 @@ void CDlgMain::End(const int nEndCode)
 
 	App.WriteParamFileBOOL(L"Param", L"UseJson",   ((CButton *)GetDlgItem(IDC_CHECK_USE_JSON))  ->GetCheck());
 	App.WriteParamFileBOOL(L"Param", L"UseHeader", ((CButton *)GetDlgItem(IDC_CHECK_USE_HEADER))->GetCheck());
-	App.WriteParamFileBOOL(L"Param", L"Log"      , ((CButton *)GetDlgItem(IDC_CHECK_LOG_USE))   ->GetCheck());
 	App.WriteParamFileBOOL(L"Param", L"OpenFile" , ((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->GetCheck());
+	App.WriteParamFileBOOL(L"Param", L"Binary"   , m_bUseBinary);
 
 	m_pComboUrlList->End();
 
@@ -277,10 +282,15 @@ void CDlgMain::OnBnClickedButtonGo()
 			m_pThread = NULL;
 		}
 
-		
-		BOOL bUseHeader = ((CButton *)GetDlgItem(IDC_CHECK_USE_HEADER))->GetCheck();
-		BOOL bUseJson   = ((CButton *)GetDlgItem(IDC_CHECK_USE_JSON))  ->GetCheck();
-		BOOL bShowFile  = ((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->GetCheck();
+		BOOL bUseHeader = FALSE;
+		BOOL bUseJson   = FALSE;
+		BOOL bShowFile  = FALSE;
+
+		if (!m_bUseBinary) {
+			bUseHeader = ((CButton *)GetDlgItem(IDC_CHECK_USE_HEADER))->GetCheck();
+			bUseJson   = ((CButton *)GetDlgItem(IDC_CHECK_USE_JSON))  ->GetCheck();
+			bShowFile  = ((CButton *)GetDlgItem(IDC_CHECK_OPEN_FILE)) ->GetCheck();
+		}
 
 		CString strUrl;
 		m_pComboUrlList->GetString(strUrl);
@@ -298,7 +308,7 @@ void CDlgMain::OnBnClickedButtonGo()
 		}
 
 		m_pThread = CMainThread::Create(m_hWnd, FALSE);
-		m_pThread->SetParam(strUrl, tableHeader, bUseHeader, bUseJson);
+		m_pThread->SetParam(strUrl, tableHeader, bUseHeader, bUseJson, m_bUseBinary);
 		m_pThread->ShowFileOpen(bShowFile);
 		m_pThread->ResumeThread();
 
@@ -425,6 +435,27 @@ void CDlgMain::OnBnClickedCheckLogUse()
 
 	App.WriteParamFileBOOL(L"Param", L"Log", bFlag);
 }
+
+
+/// <summary>
+/// バイナリーで落とす
+/// </summary>
+void CDlgMain::OnBnClickedCheckBinary()
+{
+	m_bUseBinary = ((CButton *)GetDlgItem(IDC_CHECK_BINARY))->GetCheck();
+
+	EnableCheckBox();
+}
+
+
+void CDlgMain::EnableCheckBox()
+{
+	GetDlgItem(IDC_CHECK_USE_JSON)  ->EnableWindow(!m_bUseBinary);
+	GetDlgItem(IDC_CHECK_USE_HEADER)->EnableWindow(!m_bUseBinary);
+	GetDlgItem(IDC_CHECK_LOG_USE)   ->EnableWindow(!m_bUseBinary);
+	GetDlgItem(IDC_CHECK_OPEN_FILE) ->EnableWindow(!m_bUseBinary);
+}
+
 
 
 
@@ -558,3 +589,4 @@ void CDlgMain::InitWindowPos()
 
 	MoveWindow(x, y, cx, cy);
 }
+

@@ -41,6 +41,7 @@ protected:
 	BOOL    m_bUseHeader;
 	BOOL    m_bShowFile;
 	BOOL    m_bUseJson;
+	BOOL    m_bUseBinary;
 	DWORD   m_nRxTimeOut;
 	CString m_strUrl;
 	CString m_strResponsFileName;
@@ -53,7 +54,7 @@ protected:
 
 
 public:
-	void SetParam(const WCHAR *pszUrl, CStringTable &tableHeader, const BOOL bUseHeader, const BOOL bUseJson);
+	void SetParam(const WCHAR *pszUrl, CStringTable &tableHeader, const BOOL bUseHeader, const BOOL bUseJson, const BOOL bUseBinary);
 	void ShowFileOpen(BOOL bShowFile);
 
 

@@ -114,11 +114,12 @@ void CMainThread::Interruption()
 /// パラメータのセット
 /// </summary>
 /// <param name="pszUrl"></param>
-void CMainThread::SetParam(const WCHAR *pszUrl, CStringTable &tableHeader, const BOOL bUseHeader, const BOOL bUseJson)
+void CMainThread::SetParam(const WCHAR *pszUrl, CStringTable &tableHeader, const BOOL bUseHeader, const BOOL bUseJson, const BOOL bBinary)
 {
 	m_strUrl      = pszUrl;
 	m_bUseHeader  = bUseHeader;
 	m_bUseJson    = bUseJson;
+	m_bUseBinary  = bBinary;
 	m_tableHeader = tableHeader;
 }
 
@@ -331,6 +332,8 @@ BOOL CMainThread::Main(DWORD dwService, CString strHost, CString strPath, WORD w
 	if (memResponsBody.GetSize() || memResponsHeader.GetSize()) {
 		File fp;
 
+		if (m_bUseBinary) { m_strResponsFileName += L".jpeg"; }
+
 		if (fp.Open(m_strResponsFileName, File::_WRITE)) {
 			if (memResponsHeader.GetSize()) {
 				fp.Write(memResponsHeader, memResponsHeader.GetSize());
@@ -346,7 +349,6 @@ BOOL CMainThread::Main(DWORD dwService, CString strHost, CString strPath, WORD w
 			} else {
 				FileOpen(m_strResponsFileName);
 			}
-
 		}
 	}
 

@@ -36,8 +36,11 @@ protected:
 
 
 protected:
+	BOOL m_bUseBinary;
 	CComboCtrl *m_pComboUrlList;
 	CExComboBox m_cbUrlList;
+
+	void EnableCheckBox();
 
 
 	// スレッド
@@ -85,4 +88,5 @@ public:
 	afx_msg void OnBnClickedButtonUrlSave();
 	afx_msg void OnBnClickedButtonUrlDelete();
 	afx_msg void OnBnClickedButtonHeaderEdit();
+	afx_msg void OnBnClickedCheckBinary();
 };

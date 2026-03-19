@@ -39,6 +39,8 @@
 #define IDC_EDIT_HEADER7                1028
 #define IDC_EDIT_HEADER8                1029
 #define IDC_EDIT_HEADER9                1030
+#define IDC_CHECK_                      1031
+#define IDC_CHECK_BINARY                1031
 
 // Next default values for new objects
 // 
@@ -46,7 +48,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1031
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
